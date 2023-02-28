@@ -48,24 +48,45 @@ uint8_t parse_packet(udphdr_t* udphdr, unsigned char* packetptr) {
 
         //256 Bit (32 Byte) Payload Header
         RDI_Packet.payloadHeaderData.EventID            = Header.event_ID; //Duplicated b/c useful later
+        // RDI_Packet.payloadHeaderData.CRC                = (packetptr[24] << 8) | (packetptr[25]);     
+        // RDI_Packet.payloadHeaderData.Len                = (packetptr[26] << 8) | (packetptr[27]);           
+        // RDI_Packet.payloadHeaderData.SQC                =  packetptr[28];
+        // RDI_Packet.payloadHeaderData.MessageCounter     =  packetptr[29];
+        // RDI_Packet.payloadHeaderData.UTCTimeStamp       = (packetptr[30] << 56) | (packetptr[31] << 48) | (packetptr[32] << 40) | (packetptr[33] << 32) | (packetptr[34] << 24) | (packetptr[35] << 16) | (packetptr[36] << 8) | packetptr[37];
+        // RDI_Packet.payloadHeaderData.TimeStamp          = (packetptr[38] << 24) | (packetptr[39] << 16) | (packetptr[40] << 8) | packetptr[41];
+        // RDI_Packet.payloadHeaderData.MeasurementCounter = (packetptr[42] << 24) | (packetptr[43] << 16) | (packetptr[44] << 8) | packetptr[45];
+        // RDI_Packet.payloadHeaderData.CycleCounter       = (packetptr[46] << 24) | (packetptr[47] << 16) | (packetptr[48] << 8) | packetptr[49];
+        // RDI_Packet.payloadHeaderData.NofDetections      = (packetptr[50] << 8) | packetptr[51];
+        // RDI_Packet.payloadHeaderData.VambigRaw          = (packetptr[52] << 8) | packetptr[53];
+        // RDI_Packet.payloadHeaderData.CenterFrequencyRaw =  packetptr[54];
+        // RDI_Packet.payloadHeaderData.DetectionsInPacket =  packetptr[55];
+        // RDI_Packet.payloadHeaderData.Vambig             = RDI_Packet.payloadHeaderData.VambigRaw            * resRDIMults.VambigRes;
+        // RDI_Packet.payloadHeaderData.CenterFrequency    = RDI_Packet.payloadHeaderData.CenterFrequencyRaw   * resRDIMults.CenterFreqRes;
+
         RDI_Packet.payloadHeaderData.CRC                = (packetptr[24] << 8) | (packetptr[25]);     
         RDI_Packet.payloadHeaderData.Len                = (packetptr[26] << 8) | (packetptr[27]);           
         RDI_Packet.payloadHeaderData.SQC                =  packetptr[28];
-        RDI_Packet.payloadHeaderData.MessageCounter     =  packetptr[29];
-        RDI_Packet.payloadHeaderData.UTCTimeStamp       = (packetptr[30] << 56) | (packetptr[31] << 48) | (packetptr[32] << 40) | (packetptr[33] << 32) | (packetptr[34] << 24) | (packetptr[35] << 16) | (packetptr[36] << 8) | packetptr[37];
-        RDI_Packet.payloadHeaderData.TimeStamp          = (packetptr[38] << 24) | (packetptr[39] << 16) | (packetptr[40] << 8) | packetptr[41];
-        RDI_Packet.payloadHeaderData.MeasurementCounter = (packetptr[42] << 24) | (packetptr[43] << 16) | (packetptr[44] << 8) | packetptr[45];
-        RDI_Packet.payloadHeaderData.CycleCounter       = (packetptr[46] << 24) | (packetptr[47] << 16) | (packetptr[48] << 8) | packetptr[49];
-        RDI_Packet.payloadHeaderData.NofDetections      = (packetptr[50] << 8) | packetptr[51];
-        RDI_Packet.payloadHeaderData.VambigRaw          = (packetptr[52] << 8) | packetptr[53];
-        RDI_Packet.payloadHeaderData.CenterFrequencyRaw =  packetptr[54];
-        RDI_Packet.payloadHeaderData.DetectionsInPacket =  packetptr[55];
+        RDI_Packet.payloadHeaderData.UTCTimeStamp       = (packetptr[29] << 56) | (packetptr[30] << 48) | (packetptr[31] << 40) | (packetptr[32] << 32) | (packetptr[33] << 24) | (packetptr[34] << 16) | (packetptr[35] << 8) | packetptr[36];
+        RDI_Packet.payloadHeaderData.TimeStamp          = (packetptr[37] << 24) | (packetptr[38] << 16) | (packetptr[39] << 8) | packetptr[40];
+        RDI_Packet.payloadHeaderData.NofDetections      = (packetptr[41] << 8) | packetptr[42];
+        RDI_Packet.payloadHeaderData.VambigRaw          = (packetptr[43] << 8) | packetptr[44];
         RDI_Packet.payloadHeaderData.Vambig             = RDI_Packet.payloadHeaderData.VambigRaw            * resRDIMults.VambigRes;
-        RDI_Packet.payloadHeaderData.CenterFrequency    = RDI_Packet.payloadHeaderData.CenterFrequencyRaw   * resRDIMults.CenterFreqRes;
+        RDI_Packet.payloadHeaderData.DetectionsInPacket = RDI_Packet.payloadHeaderData.NofDetections;
+
+	ROS_ERROR("**********************************************************************");
+	ROS_ERROR("EventID %d : %d %d %d %d", RDI_Packet.payloadHeaderData.EventID, FAR0, FAR1, NEAR0, NEAR1);
+	ROS_ERROR("Len %d", RDI_Packet.payloadHeaderData.Len);
+	ROS_ERROR("SQC %d", RDI_Packet.payloadHeaderData.SQC);
+	ROS_ERROR("MCounter %d", RDI_Packet.payloadHeaderData.MessageCounter);
+	ROS_ERROR("UTC %llu", RDI_Packet.payloadHeaderData.UTCTimeStamp);
+	ROS_ERROR("TimeStamp %ld", RDI_Packet.payloadHeaderData.TimeStamp);
+	ROS_ERROR("NofDetections %d", RDI_Packet.payloadHeaderData.NofDetections);
+	ROS_ERROR("DetectionsInPacket %d", RDI_Packet.payloadHeaderData.DetectionsInPacket);
+	ROS_ERROR("**********************************************************************");
 
         //7168 - 8512 Bit (896 - 1064 Byte) Radar Dection Payload. Size depends on eventID. 
-        int listStartIndex = 56;
-        for (int i = 0; i < RDI_Packet.payloadHeaderData.DetectionsInPacket; i++) { //Only fill as many as we have valid packets, dont bother filling 0's
+        int listStartIndex = 48;
+        for (int i = 0; i < RDI_Packet.payloadHeaderData.NofDetections; i++) { //Only fill as many as we have valid packets, dont bother filling 0's
 
             //Radar Detection Images are 224 Bits (28 Bytes) each
             RDI_Packet.listDataArray[i].f_Range      = (packetptr[listStartIndex++] << 8) | (packetptr[listStartIndex++]);
@@ -84,14 +105,27 @@ uint8_t parse_packet(udphdr_t* udphdr, unsigned char* packetptr) {
             RDI_Packet.listDataArray[i].f_ElAngVar   = (packetptr[listStartIndex++] << 8) | (packetptr[listStartIndex++]);
             RDI_Packet.listDataArray[i].ui_Pdh0      =  packetptr[listStartIndex++];
             RDI_Packet.listDataArray[i].f_SNR        =  packetptr[listStartIndex++];
+            // ROS_ERROR("%d Raw: "
+            //         "f_Range %d; AzAng0 %d; AzAng1 %d; f_Prob0 %d; f_Prob1 %d; SNR %d", i,
+            //         RDI_Packet.listDataArray[i].f_Range,
+            //         RDI_Packet.listDataArray[i].f_AzAng0,
+            //         RDI_Packet.listDataArray[i].f_AzAng1,
+            //         RDI_Packet.listDataArray[i].f_Prob0,
+            //         RDI_Packet.listDataArray[i].f_Prob1,
+            //         RDI_Packet.listDataArray[i].f_SNR);
 
 
             //Add in the proper resolution
             RDI_Packet.resListDataArray[i].f_Range      = RDI_Packet.listDataArray[i].f_Range      * resRDIMults.f_RangeRes;
-            RDI_Packet.resListDataArray[i].f_VrelRad    = RDI_Packet.listDataArray[i].f_VrelRad    * resRDIMults.f_VrelRadRes;
-            RDI_Packet.resListDataArray[i].f_AzAng0     = RDI_Packet.listDataArray[i].f_AzAng0     * resRDIMults.f_AzAng0Res;
-            RDI_Packet.resListDataArray[i].f_AzAng1     = RDI_Packet.listDataArray[i].f_AzAng1     * resRDIMults.f_AzAng1Res;
-            RDI_Packet.resListDataArray[i].f_ElAng      = RDI_Packet.listDataArray[i].f_ElAng      * resRDIMults.f_ElAngRes;
+            RDI_Packet.resListDataArray[i].f_VrelRad    = RDI_Packet.listDataArray[i].f_VrelRad    * resRDIMults.f_VrelRadRes; //  + 150;
+            RDI_Packet.resListDataArray[i].f_AzAng0     = RDI_Packet.listDataArray[i].f_AzAng0     * resRDIMults.f_AzAng0Res; //  + 3.1415;
+            RDI_Packet.resListDataArray[i].f_AzAng1     = RDI_Packet.listDataArray[i].f_AzAng1     * resRDIMults.f_AzAng1Res; //  + 3.1415;
+            RDI_Packet.resListDataArray[i].f_ElAng      = RDI_Packet.listDataArray[i].f_ElAng      * resRDIMults.f_ElAngRes; //  + 3.1415;
+            
+            // RDI_Packet.resListDataArray[i].f_ElAng = fmod(RDI_Packet.resListDataArray[i].f_ElAng + 3.1415 + 3.1415, 6.2830) - 3.1415;
+            // RDI_Packet.resListDataArray[i].f_AzAng0 = fmod(RDI_Packet.resListDataArray[i].f_AzAng0 + 3.1415 + 3.1415, 6.2830) - 3.1415;
+            // RDI_Packet.resListDataArray[i].f_AzAng1 = fmod(RDI_Packet.resListDataArray[i].f_AzAng1 + 3.1415 + 3.1415, 6.2830) - 3.1415;
+
             RDI_Packet.resListDataArray[i].f_RCS0       = RDI_Packet.listDataArray[i].f_RCS0       * resRDIMults.f_RCS0Res;
             RDI_Packet.resListDataArray[i].f_RCS1       = RDI_Packet.listDataArray[i].f_RCS1       * resRDIMults.f_RCS1Res;
             RDI_Packet.resListDataArray[i].f_Prob0      = RDI_Packet.listDataArray[i].f_Prob0      * resRDIMults.f_Prob0Res;
@@ -103,9 +137,26 @@ uint8_t parse_packet(udphdr_t* udphdr, unsigned char* packetptr) {
             RDI_Packet.resListDataArray[i].f_ElAngVar   = RDI_Packet.listDataArray[i].f_ElAngVar   * resRDIMults.f_ElAngVarRes;
             RDI_Packet.resListDataArray[i].ui_Pdh0      = RDI_Packet.listDataArray[i].ui_Pdh0;
             RDI_Packet.resListDataArray[i].f_SNR        = RDI_Packet.listDataArray[i].f_SNR        * resRDIMults.f_SNRRes;
+            // if ((RDI_Packet.payloadHeaderData.EventID == FAR0 || RDI_Packet.payloadHeaderData.EventID == FAR1) && 
+            //     (std::abs(RDI_Packet.resListDataArray[i].f_AzAng0) > 0.15708 && std::abs(RDI_Packet.resListDataArray[i].f_AzAng1) > 0.15708))
+            //     continue;
+            // if (RDI_Packet.resListDataArray[i].f_Range < 1e-3) continue;
+            // if (RDI_Packet.resListDataArray[i].f_SNR < 3) continue;
+            // if (RDI_Packet.resListDataArray[i].f_AzAng0 < AZI_ANGLE_0_THRESHOLD ||
+            //         RDI_Packet.resListDataArray[i].f_AzAng1 > AZI_ANGLE_1_THRESHOLD) continue;
+            // ROS_ERROR("%d MTR: "
+            //         "f_Range %.3f; AzAng0 %f; AzAng1 %f; f_Prob0 %.3f; f_Prob1 %.3f; VrelRad %f; SNR %.3f", i,
+            //         RDI_Packet.resListDataArray[i].f_Range,
+            //         RDI_Packet.resListDataArray[i].f_AzAng0,
+            //         RDI_Packet.resListDataArray[i].f_AzAng1,
+            //         RDI_Packet.resListDataArray[i].f_Prob0,
+            //         RDI_Packet.resListDataArray[i].f_Prob1,
+            //         RDI_Packet.resListDataArray[i].f_VrelRad,
+            //         RDI_Packet.resListDataArray[i].f_SNR);
         }
     
         //Send packet to get published
+	ROS_ERROR("Published %d", RDI_Packet.payloadHeaderData.DetectionsInPacket);
         publishRDIPacket(&RDI_Packet);
 
     } else if (Header.service_ID == SS_PACKET_ID) {
@@ -195,7 +246,7 @@ void loadPacketMsg(RDIPacket_t * packet, radar_driver::RadarPacket * msg) {
         data.Prob1         = packet->resListDataArray[i].f_Prob1;
 
         // Sanity check to make sure that assumption0 is indeed the better assumption
-        assert(data.Prob0 >= data.Prob1);
+        // assert(data.Prob0 >= data.Prob1);
 
         data.VrelRad      = packet->resListDataArray[i].f_VrelRad;
         //Told to ignore ElAng by continental, but store anyways since we parsed it

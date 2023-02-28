@@ -48,10 +48,12 @@ int main(int argc, char** argv)
       case 'c':
         capture_live = atoi(optarg);
         printf("CAPTURE: %d\r\n", capture_live);
+        ROS_ERROR("CAPTURE: %d\r\n", capture_live);
         break;
       case 'l':
         strcpy(capture_path, optarg);
         printf("CAPTURE_PATH: %s\r\n", capture_path);
+        ROS_ERROR("CAPTURE_PATH: %s\r\n", capture_path);
         break;
       case 'f': //Optional Flag
         strcpy(filter, optarg);

@@ -1,4 +1,6 @@
 /* General Use Includes */
+#include <ros/ros.h>
+
 #include "processPacket.h"
 #include <stdio.h>
 #include <string.h>
@@ -42,7 +44,7 @@ pcap_t* open_pcap_socket(char* device, const char* bpfstr)
 
     // Open the device for live capture, as opposed to reading a packet
     // capture file.
-    if ((pd = pcap_open_live(device, BUFSIZ, 1, 0, errbuf)) == NULL) //BUFSIZ = 8192 bytes
+    if ((pd = pcap_open_live(device, BUFSIZ, 1, 10, errbuf)) == NULL) //BUFSIZ = 8192 bytes
     {
         printf("Try running the following if permission errors:\n");
         printf("\tsudo setcap 'cap_net_raw=pe' devel/lib/radar_driver/radar_publisher\n");
@@ -97,6 +99,7 @@ pcap_t* open_pcap_file(const char* filename)
 
 void capture_loop(pcap_t* pd, int packets, pcap_handler func, int capture_live, const char *capture_path)
 {
+    	ROS_ERROR("capture 11");
     int linktype;
  
     // Determine the datalink layer type.
@@ -128,6 +131,7 @@ void capture_loop(pcap_t* pd, int packets, pcap_handler func, int capture_live, 
     }
     
     // Start capturing packets.
+ROS_ERROR("pcap loop");
     if (capture_live == LIVE) {
         if (pcap_loop(pd, packets, func, 0) < 0) {
             printf("pcap_loop failed: %s\n", pcap_geterr(pd));
@@ -145,11 +149,13 @@ void capture_loop(pcap_t* pd, int packets, pcap_handler func, int capture_live, 
             }
         }
     }
+    
 }
 
 void receive_packet(u_char *user, struct pcap_pkthdr *packethdr, 
                   u_char *packetptr)
 {
+	// ROS_ERROR("received %d", user[0]);
     struct ip* iphdr;
     struct udphdr* udphdr;
     char iphdrInfo[256], srcip[256], dstip[256];
@@ -195,10 +201,15 @@ int run(int port, int packets, char interface[], const char filter[], int captur
     //Hardcode to use UDP. Enter the protocol, port and whatever filter string we're given
     snprintf(bpfstr, sizeof(bpfstr), "udp port %d %s", port, filter);
     printf("You entered: %s: %s\n", interface, bpfstr); //Spit back out to the user
+    ROS_ERROR("You entered: %s: %s\n", interface, bpfstr); //Spit back out to the user
+    ROS_ERROR("capture %d %d %d", capture_live, LIVE, OFFLINE);
 
     // Open libpcap, set the program termination signals then start
     // processing packets for LIVE data.
-    if ((capture_live == LIVE) && (pd = open_pcap_socket(interface, bpfstr))) {
+	pd = open_pcap_socket(interface, bpfstr);
+	ROS_ERROR("pd = %d", pd);
+    if ((capture_live == LIVE) && (pd != NULL)) {
+    	ROS_ERROR("capture 01");
         signal(SIGINT, bailout); //Set function callbacks for various failure signals
         signal(SIGTERM, bailout);
         signal(SIGQUIT, bailout);
@@ -206,6 +217,7 @@ int run(int port, int packets, char interface[], const char filter[], int captur
         //Now we call our looping function to capture packets
         //We give it the file descriptor for the socket, the # of packets to collect
         //And a call back for us to parse the packets coming in
+    	ROS_ERROR("capture 1");
         capture_loop(pd, packets, (pcap_handler)receive_packet, capture_live, capture_path);
         bailout(0); //Cut out
     } else if ((capture_live == OFFLINE) && (pd = open_pcap_file(capture_path))) {
@@ -216,6 +228,7 @@ int run(int port, int packets, char interface[], const char filter[], int captur
         //Now we call our looping function to capture packets
         //We give it the file descriptor for the socket, the # of packets to collect
         //And a call back for us to parse the packets coming in
+    	ROS_ERROR("capture 2");
         capture_loop(pd, 0, (pcap_handler)receive_packet, capture_live, capture_path);
         bailout(0); //Cut out
     }

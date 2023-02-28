@@ -1,3 +1,4 @@
+#include <ros/console.h>
 #include <cluster.h>
 
 #include <algorithm>

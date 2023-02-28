@@ -47,6 +47,8 @@ uint8_t PacketProcessor::initializePacketProcessor(RadarPublisher* newPublisher,
 }
 
 uint8_t PacketProcessor::processRDIMsg(const radar_driver::RadarPacket::ConstPtr& packet) {
+	ROS_ERROR("====================================");
+	ROS_ERROR("RadarPacket %d %d (%d %d %d %d %d %d)", packet->Detections.size(), packet->EventID, FAR0, FAR1, NEAR0, NEAR1, NEAR2);
     if ( packet->Detections.size() < 1 ){
         return NO_DETECTIONS;
     }
@@ -79,7 +81,7 @@ uint8_t PacketProcessor::processRDIMsg(const radar_driver::RadarPacket::ConstPtr
                 return err;
             }
         }
-    } else if (packet->EventID == NEAR0 || packet->EventID == NEAR1 || packet->EventID == NEAR2) {
+    } else if (false /*packet->EventID == NEAR0 || packet->EventID == NEAR1 || packet->EventID == NEAR2*/) {
         if (scanMode != FAR_SCAN) {
             if (curNearTimeStamp == 0){ //Init Case
                 curNearTimeStamp = packet->TimeStamp;
@@ -149,6 +151,7 @@ uint8_t PacketProcessor::processSSPacket(SSPacket_t* packet) {
 * -- Only called ffrom synchronized methods, dont need to mutex
 */
 uint8_t PacketProcessor::publishPackets(uint8_t idx) {
+	ROS_ERROR("pub idx %d", idx);
 
     if (Publisher == NULL) { //Publisher not set up
         //Check if we can still clear the packets
@@ -198,27 +201,52 @@ bool loadRDIMessageFromPacket(radar_driver::RadarPacket* newMsg, const radar_dri
     newMsg->Vambig                     = oldMsg->Vambig;
     newMsg->CenterFrequency            = oldMsg->CenterFrequency;
     newMsg->Detections.clear();
-
     for(uint8_t i = 0; i < oldMsg->Detections.size(); i++) {
+            ROS_ERROR("");
+            ROS_ERROR("PROC:RDI Idx: %d "    , i);
+            ROS_ERROR("PROC:posX %f "        , oldMsg->Detections[i].posX);
+            ROS_ERROR("PROC:posY %f "        , oldMsg->Detections[i].posY);
+            ROS_ERROR("PROC:posZ %f "        , oldMsg->Detections[i].posZ);
+            ROS_ERROR("PROC:VrelRad %f "     , oldMsg->Detections[i].VrelRad);
+            ROS_ERROR("PROC:AzAng0 %f "       , oldMsg->Detections[i].AzAng0);
+            ROS_ERROR("PROC:AzAng1 %f "       , oldMsg->Detections[i].AzAng1);
+            ROS_ERROR("PROC:ElAng %f "       , oldMsg->Detections[i].ElAng);
+            ROS_ERROR("PROC:RCS0 %f "         , oldMsg->Detections[i].RCS0);
+            ROS_ERROR("PROC:RCS1 %f "         , oldMsg->Detections[i].RCS1);
+            ROS_ERROR("PROC:RangeVar %f "    , oldMsg->Detections[i].RangeVar);
+            ROS_ERROR("PROC:VrelRadVar %f "  , oldMsg->Detections[i].VrelRadVar);
+            ROS_ERROR("PROC:AzAngVar0 %f "    , oldMsg->Detections[i].AzAngVar0);
+            ROS_ERROR("PROC:AzAngVar1 %f "    , oldMsg->Detections[i].AzAngVar1);
+            ROS_ERROR("PROC:ElAngVar %f "    , oldMsg->Detections[i].ElAngVar);
+            ROS_ERROR("PROC:Prob0 %f "       , oldMsg->Detections[i].Prob0);
+            ROS_ERROR("PROC:Prob1 %f "       , oldMsg->Detections[i].Prob1);
+            ROS_ERROR("PROC:SNR %f "         , oldMsg->Detections[i].SNR);
 
         // TODO: Figure out an SNR threshold value that actually works here.
         if (oldMsg->Detections[i].SNR < SNR_THRESHOLD) { // Too much noise; drop detection.
+		ROS_ERROR("continue SNR %f %d", oldMsg->Detections[i].SNR, SNR_THRESHOLD);
             continue;
         } else if (abs(oldMsg->Detections[i].VrelRad) < VELOCITY_LOWER_THRESHOLD) {
+		ROS_ERROR("continue VrelRad %f %f", oldMsg->Detections[i].VrelRad, VELOCITY_LOWER_THRESHOLD);
             continue;
-        } else if (oldMsg->Detections[i].posX > DISTANCE_MAX_THRESHOLD) { // need to do trig
-            continue;
+        // } else if (oldMsg->Detections[i].posX > DISTANCE_MAX_THRESHOLD) { // need to do trig
+	// 	ROS_ERROR("continue poxX MAX %f %d", oldMsg->Detections[i].posX, DISTANCE_MAX_THRESHOLD);
+        //     continue;
         } else if (oldMsg->Detections[i].posX < DISTANCE_MIN_THRESHOLD) {
+		ROS_ERROR("continue poxX MIN %f %f", oldMsg->Detections[i].posX, DISTANCE_MIN_THRESHOLD);
             continue;
-        } else if (oldMsg->Detections[i].RCS0 > RCS_THRESHOLD) {
-            continue;
+        // } else if (oldMsg->Detections[i].RCS0 > RCS_THRESHOLD) {
+	// 	ROS_ERROR("continue RCSO %f %d", oldMsg->Detections[i].RCS0, RCS_THRESHOLD);
+        //     continue;
         } else if (oldMsg->EventID == FAR1 || oldMsg->EventID == FAR0) {
             //limit far scan to 9 degrees, according to conti
             if (oldMsg->Detections[i].AzAng0 < -0.15708 || oldMsg->Detections[i].AzAng1 > 0.15708) {
+		    ROS_ERROR("FAR angle");
                 continue;
             }
-        } else if(oldMsg->Detections[i].AzAng0 < AZI_ANGLE_0_THRESHOLD || oldMsg->Detections[i].AzAng1 > AZI_ANGLE_1_THRESHOLD){
-            continue;
+        // } else if(oldMsg->Detections[i].AzAng0 < AZI_ANGLE_0_THRESHOLD || oldMsg->Detections[i].AzAng1 > AZI_ANGLE_1_THRESHOLD){
+	// 	ROS_ERROR("continue AzAng0 %f %f", oldMsg->Detections[i].AzAng0, AZI_ANGLE_0_THRESHOLD);
+        //     continue;
         }
 
         radar_driver::RadarDetection data;
@@ -248,9 +276,32 @@ bool loadRDIMessageFromPacket(radar_driver::RadarPacket* newMsg, const radar_dri
         data.posX = oldMsg->Detections[i].posX;
         data.posY = oldMsg->Detections[i].posY;
         data.posZ = oldMsg->Detections[i].posZ;
-
         newMsg->Detections.push_back(data);
+        std::cerr << data << std::endl;
+
     }
+        // for(uint8_t i = 0; i < newMsg->Detections.size(); i++) {
+        //     ROS_ERROR("PROC:RDI Idx: %d "    , i);
+        //     ROS_ERROR("PROC:posX %f "        , oldMsg->Detections[i].posX);
+        //     ROS_ERROR("PROC:posY %f "        , oldMsg->Detections[i].posY);
+        //     ROS_ERROR("PROC:posZ %f "        , oldMsg->Detections[i].posZ);
+        //     ROS_ERROR("PROC:VrelRad %f "     , oldMsg->Detections[i].VrelRad);
+        //     ROS_ERROR("PROC:AzAng0 %f "       , oldMsg->Detections[i].AzAng0);
+        //     ROS_ERROR("PROC:AzAng1 %f "       , oldMsg->Detections[i].AzAng1);
+        //     ROS_ERROR("PROC:ElAng %f "       , oldMsg->Detections[i].ElAng);
+        //     ROS_ERROR("PROC:RCS0 %f "         , oldMsg->Detections[i].RCS0);
+        //     ROS_ERROR("PROC:RCS1 %f "         , oldMsg->Detections[i].RCS1);
+        //     ROS_ERROR("PROC:RangeVar %f "    , oldMsg->Detections[i].RangeVar);
+        //     ROS_ERROR("PROC:VrelRadVar %f "  , oldMsg->Detections[i].VrelRadVar);
+        //     ROS_ERROR("PROC:AzAngVar0 %f "    , oldMsg->Detections[i].AzAngVar0);
+        //     ROS_ERROR("PROC:AzAngVar1 %f "    , oldMsg->Detections[i].AzAngVar1);
+        //     ROS_ERROR("PROC:ElAngVar %f "    , oldMsg->Detections[i].ElAngVar);
+        //     ROS_ERROR("PROC:Prob0 %f "       , oldMsg->Detections[i].Prob0);
+        //     ROS_ERROR("PROC:Prob1 %f "       , oldMsg->Detections[i].Prob1);
+        //     ROS_ERROR("PROC:SNR %f "         , oldMsg->Detections[i].SNR);
+        //     ROS_ERROR("");
+        // }
+
 
     // Return true if there is at least one detection in newMsg after filtering
     return (newMsg->Detections.size() > 0);

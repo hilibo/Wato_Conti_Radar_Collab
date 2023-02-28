@@ -46,12 +46,12 @@
 
 //General Definitions
 #define SENSOR_SERIAL_NUM_LEN   26
-#define RDI_ARRAY_LEN           38
+#define RDI_ARRAY_LEN           256
 #define RDI_ARRAY_LEN_NEAR_2    32
 
 //Size Defs
-#define NUM_FAR         12
-#define NUM_NEAR        18
+#define NUM_FAR         120
+#define NUM_NEAR        180
 
 //Pdh0 Probability flag masks
 //Usage: bool x = pdh0 & NEAR_PROB_MASK;

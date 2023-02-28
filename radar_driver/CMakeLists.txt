@@ -45,7 +45,7 @@ catkin_package(
 
 ## Vars to build with
 set(extra_LIBRARIES -lpcap -lpthread) #Packet Cap, Capabilities, Mutexes
-set(CMAKE_CXX_FLAGS "-std=c++11 -w -g -O3 ${CMAKE_CXX_FLAGS}") #Ignore all warnings, debug flags, optimize
+set(CMAKE_CXX_FLAGS "-std=c++14 -w -g -O3 ${CMAKE_CXX_FLAGS}") #Ignore all warnings, debug flags, optimize
 set(RADAR_UNFILTER_SOURCE src/UnfilteredMain.cpp    src/parser.cpp          src/sniffer.cpp)
 set(RADAR_FILTER_SOURCE   src/radarPublisher.cpp    src/processPacket.cpp   src/FilteredMain.cpp)
 set(VIS_SOURCE            src/PointCloudConverter.cpp)

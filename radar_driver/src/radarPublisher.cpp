@@ -29,11 +29,13 @@ void RadarPublisher::publishRadarDetectionMsg(radar_driver::RadarDetection& rada
 }
 
 uint8_t RadarPublisher::pubCallback(PacketGroup_t* Packets) {   //call upon the appropriate publish function
+	ROS_ERROR("pubCallback far %d", Packets->numFarPackets);
   for (uint8_t i = 0; i < Packets->numFarPackets; i++) {
     this->publishRadarPacketMsg(Packets->farPackets[i]);
     ROS_INFO_STREAM("Far packet timestamp: " << std::to_string((Packets->farPackets[i]).TimeStamp));
   }
 
+	ROS_ERROR("pubCallback near %d", Packets->numNearPackets);
   for (uint8_t i = 0; i < Packets->numNearPackets; i++) {
     this->publishRadarPacketMsg(Packets->nearPackets[i]);
     ROS_INFO_STREAM("Near packet timestamp: " << std::to_string((Packets->nearPackets[i]).TimeStamp));
